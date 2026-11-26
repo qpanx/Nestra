@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NESTRA Data Model</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a drafting sheet. Narrow reading column, wide diagram plates, a sticky module index. */
+:root{
+  --paper:#f5f7f6; --sheet:#ffffff; --ink:#14232b; --muted:#56666e; --rule:#d5dedc; --grid:#e7eeec;
+  --accent:#0f6e6a; --accent-soft:#dcefed;
+  --asis:#2f6fa8; --asis-soft:#e1ecf6;
+  --plan:#a8641f; --plan-soft:#f6eadb;
+  --buy:#4c7d3a; --buy-soft:#e5f0de;
+  --f-display:"Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-body:"IBM Plex Sans", "Segoe UI", Roboto, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0f171b; --sheet:#152127; --ink:#e3ecea; --muted:#9aaba9; --rule:#2a3a40; --grid:#1a282e;
+  --accent:#4cc2b9; --accent-soft:#16363a;
+  --asis:#7fb3e6; --asis-soft:#172c40;
+  --plan:#e3a565; --plan-soft:#3a2a18;
+  --buy:#94c97e; --buy-soft:#1f3219; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --paper:#0f171b; --sheet:#152127; --ink:#e3ecea; --muted:#9aaba9; --rule:#2a3a40; --grid:#1a282e;
+  --accent:#4cc2b9; --accent-soft:#16363a;
+  --asis:#7fb3e6; --asis-soft:#172c40;
+  --plan:#e3a565; --plan-soft:#3a2a18;
+  --buy:#94c97e; --buy-soft:#1f3219; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 80px;display:flex;flex-direction:column;gap:56px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(2rem,5vw,3rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:1.6rem;font-weight:700}
+h3{font-size:1.1rem;font-weight:700}
+p{margin:0;max-width:68ch}
+code,.mono{font-family:var(--f-mono);font-size:.9em}
+.eyebrow{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+header{display:flex;flex-direction:column;gap:14px}
+.lede{font-size:1.08rem;color:var(--muted)}
+.status{display:flex;gap:10px;align-items:flex-start;background:var(--sheet);border:1px solid var(--rule);border-left:3px solid var(--plan);padding:12px 14px;border-radius:4px;max-width:80ch;font-size:.92rem}
+.status b{white-space:nowrap}
+
+nav.index{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);border-block:1px solid var(--rule);padding-block:10px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
+nav.index ul{list-style:none;margin:0;padding:0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin}
+nav.index a{display:block;white-space:nowrap;text-decoration:none;color:var(--ink);font-size:.85rem;padding:5px 10px;border:1px solid var(--rule);border-radius:999px;background:var(--sheet)}
+nav.index a:hover,nav.index a:focus-visible{border-color:var(--accent);color:var(--accent);outline:none}
+
+section{display:flex;flex-direction:column;gap:18px;scroll-margin-top:70px}
+.sheet{background:var(--sheet);border:1px solid var(--rule);border-radius:6px}
+
+/* Module grid */
+.modules{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.mod{padding:16px;display:flex;flex-direction:column;gap:8px;text-decoration:none;color:inherit}
+.mod:hover{border-color:var(--accent)}
+.mod .num{font-family:var(--f-mono);font-size:.75rem;color:var(--muted)}
+.mod .owns{font-size:.9rem;color:var(--muted)}
+.mod .tables{font-family:var(--f-mono);font-size:.78rem;color:var(--ink);line-height:1.5}
+.tag{display:inline-block;font-family:var(--f-mono);font-size:.7rem;letter-spacing:.04em;padding:1px 7px;border-radius:3px;width:fit-content}
+.t-asis{background:var(--asis-soft);color:var(--asis)}
+.t-plan{background:var(--plan-soft);color:var(--plan)}
+.t-buy{background:var(--buy-soft);color:var(--buy)}
+
+/* Three states */
+.states{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.state{padding:18px;display:flex;flex-direction:column;gap:8px;border-top-width:4px}
+.state.asis{border-top-color:var(--asis)} .state.plan{border-top-color:var(--plan)} .state.buy{border-top-color:var(--buy)}
+.state h3{font-size:1.25rem}
+.state .q{font-size:.9rem;color:var(--muted)}
+.state .tb{font-family:var(--f-mono);font-size:.8rem}
+.bridges{padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.bridges ol{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+@media (max-width:760px){.states{grid-template-columns:1fr}}
+
+/* Diagram plates */
+.plate{padding:18px;display:flex;flex-direction:column;gap:12px}
+.plate-head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;justify-content:space-between}
+.plate-head p{color:var(--muted);font-size:.92rem}
+.diagram{overflow-x:auto;border:1px dashed var(--rule);border-radius:4px;padding:12px;background:var(--paper)}
+.diagram pre.mermaid{margin:0;min-width:640px;display:flex;justify-content:center;background:transparent}
+.key{font-size:.92rem;border-left:3px solid var(--accent);padding:6px 12px;background:var(--accent-soft);border-radius:0 4px 4px 0;max-width:80ch}
+
+/* Relationship tables */
+.filter{display:flex;gap:6px;flex-wrap:wrap}
+.filter button{font:inherit;font-size:.85rem;padding:6px 12px;border-radius:4px;border:1px solid var(--rule);background:var(--sheet);color:var(--ink);cursor:pointer}
+.filter button[aria-pressed="true"]{background:var(--ink);color:var(--sheet);border-color:var(--ink)}
+.filter button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tablebox{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:.9rem}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500;background:var(--sheet);position:sticky;top:0}
+td.t{font-family:var(--f-mono);font-size:.84rem;white-space:nowrap}
+.card{font-family:var(--f-mono);font-size:.75rem;padding:2px 8px;border-radius:3px;white-space:nowrap;border:1px solid currentColor}
+.c11{color:var(--asis)} .c1n{color:var(--accent)} .cmn{color:var(--plan)}
+.count{font-size:.85rem;color:var(--muted)}
+
+/* Decisions */
+.decisions{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.dec{padding:16px;display:flex;flex-direction:column;gap:6px}
+.dec .src{font-family:var(--f-mono);font-size:.75rem;color:var(--muted)}
+.open{padding:16px 18px}
+.open ul{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--rule);padding-top:16px}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+html{scroll-behavior:smooth}
+</style>
+<style>body{margin:0} img{max-width:100%} [hidden]{display:none!important}</style>
+</head>
+<body>
+
+
+<div class="wrap">
+<header>
+  <span class="eyebrow">NESTRA · MySQL 8.4 · Data model v1</span>
+  <h1>NESTRA Data Model</h1>
+  <p class="lede">How NESTRA's data is organised: 8 modules, the three room states kept apart, an ERD for each module, and every 1:1, 1:N and M:N relationship. This is the design only. No SQL.</p>
+  <div class="status"><b>Draft for review.</b><span>Based on the web and mobile Figma files and the decisions settled so far (commission and payouts #1, pinned 3D versions #7, platform billing). It hasn't been compared with the 69-table schema in <code>NESTRA-GP/database</code>, so some table names may differ.</span></div>
+</header>
+
+<nav class="index" aria-label="Sections">
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#states">Three states</a></li>
+    <li><a href="#identity">1 Identity</a></li>
+    <li><a href="#projects">2 Projects</a></li>
+    <li><a href="#spatial">3 Spatial</a></li>
+    <li><a href="#design">4 AI Design</a></li>
+    <li><a href="#catalog">5 Catalog</a></li>
+    <li><a href="#commerce">6 Commerce</a></li>
+    <li><a href="#billing">7 Billing</a></li>
+    <li><a href="#supporting">8 Supporting</a></li>
+    <li><a href="#relationships">Relationships</a></li>
+    <li><a href="#decisions">Decisions</a></li>
+  </ul>
+</nav>
+
+<section id="overview">
+  <span class="eyebrow">Overview</span>
+  <h2>Eight modules</h2>
+  <p>Each module owns its own tables. Modules connect only through foreign keys. MySQL is the source of truth, MinIO holds the files, and Python services never write to the database directly.</p>
+  <div class="modules">
+    <a class="sheet mod" href="#identity"><span class="num">Module 1</span><h3>Identity</h3><span class="owns">Accounts, roles, profiles, engineer verification</span><span class="tables">users · user_profiles · roles · addresses · engineer_profiles</span></a>
+    <a class="sheet mod" href="#projects"><span class="num">Module 2</span><h3>Projects &amp; Collaboration</h3><span class="owns">The apartment and who can access it</span><span class="tables">projects · project_members · invitations · share_links · comments</span></a>
+    <a class="sheet mod" href="#spatial"><span class="num">Module 3</span><h3>Spatial</h3><span class="tag t-asis">AS-IS</span><span class="owns">The real apartment, kept as revisions</span><span class="tables">capture_sessions · rooms · room_revisions · walls · openings · room_objects</span></a>
+    <a class="sheet mod" href="#design"><span class="num">Module 4</span><h3>AI Design</h3><span class="tag t-plan">PLANNED</span><span class="owns">Briefs, AI output, editable layouts, validation, review</span><span class="tables">design_briefs · design_generations · design_concepts · layouts · layout_versions · layout_items</span></a>
+    <a class="sheet mod" href="#catalog"><span class="num">Module 5</span><h3>Catalog</h3><span class="owns">Stores, products, variants, stock, 3D models</span><span class="tables">stores · products · product_variants · categories · inventory · asset_models</span></a>
+    <a class="sheet mod" href="#commerce"><span class="num">Module 6</span><h3>Commerce</h3><span class="tag t-buy">PURCHASED</span><span class="owns">Carts, multi-store orders, payments, payouts</span><span class="tables">carts · orders · store_orders · order_items · payments · payouts</span></a>
+    <a class="sheet mod" href="#billing"><span class="num">Module 7</span><h3>Platform Billing</h3><span class="owns">Plans, subscriptions, AI credits</span><span class="tables">plans · subscriptions · project_entitlements · credit_ledger</span></a>
+    <a class="sheet mod" href="#supporting"><span class="num">Module 8</span><h3>Supporting</h3><span class="owns">Files, notifications, reviews, favourites, audit</span><span class="tables">media_files · notifications · reviews · favorites · audit_logs</span></a>
+  </div>
+</section>
+
+<section id="states">
+  <span class="eyebrow">Core rule</span>
+  <h2>Three room states, never mixed</h2>
+  <p>The real room, the proposed design and the furniture actually bought each live in their own tables. Data moves between them only through the explicit actions listed below.</p>
+  <div class="states">
+    <div class="sheet state asis"><span class="tag t-asis">AS-IS</span><h3>The real room</h3><span class="q">What is physically there right now?</span><span class="tb">room_revisions → walls, openings, room_objects</span></div>
+    <div class="sheet state plan"><span class="tag t-plan">PLANNED</span><h3>The proposal</h3><span class="q">What do we want the room to become?</span><span class="tb">layouts → layout_versions → layout_items</span></div>
+    <div class="sheet state buy"><span class="tag t-buy">PURCHASED</span><h3>What was bought</h3><span class="q">What did the customer pay for, and at what price?</span><span class="tb">orders → store_orders → order_items</span></div>
+  </div>
+  <div class="sheet bridges">
+    <h3>The only bridges</h3>
+    <ol>
+      <li><b>Design from reality.</b> Every <code>layout_version</code> records the <code>room_revision_id</code> it was built on. A re-scan flags the layout as out of date.</li>
+      <li><b>Buy from the design.</b> <code>cart_items</code> and <code>order_items</code> keep the <code>layout_item_id</code> of the slot they fill. The layout item's status moves to <i>ordered</i>.</li>
+      <li><b>Mark installed.</b> Creates a <i>new</i> <code>room_revision</code> with a <code>room_object</code> that points to the <code>order_item_id</code>. The old revision is kept.</li>
+      <li><b>Return.</b> The layout item goes back to a generic placeholder in the same position. If it was installed, a new As-Is revision is created without it.</li>
+    </ol>
+  </div>
+  <div class="sheet plate">
+    <div class="diagram"><pre class="mermaid">
+flowchart LR
+  A["AS-IS · room_revisions + room_objects"]
+  P["PLANNED · layouts + layout_items"]
+  B["PURCHASED · orders + order_items"]
+  A -- "layout built on revision X" --> P
+  P -- "layout_item → variant → cart → order" --> B
+  B -- "mark installed → new room_revision" --> A
+</pre></div>
+  </div>
+</section>
+
+<section id="identity">
+  <span class="eyebrow">Module 1</span>
+  <h2>Identity</h2>
+  <div class="sheet plate">
+    <div class="plate-head"><p>Login data, profile, roles and the engineer's professional profile. One user can hold several roles.</p></div>
+    <div class="diagram"><pre class="mermaid">
+erDiagram
+  USERS ||--|| USER_PROFILES : "has"
+  USERS ||--o| ENGINEER_PROFILES : "may be"
+  USERS ||--o{ SOCIAL_ACCOUNTS : "logs in with"
+  USERS ||--o{ ADDRESSES : "owns"
+  USERS }o--o{ ROLES : "user_roles"
+  ROLES }o--o{ PERMISSIONS : "role_permissions"
+  USERS }o--o{ STYLES : "user_style_preferences"
+  ENGINEER_PROFILES ||--o{ ENGINEER_VERIFICATIONS : "submits"
+  USERS {
+    bigint id PK
+    string email UK
+    string password_hash
+    datetime email_verified_at
+  }
+  USER_PROFILES {
+    bigint user_id PK,FK
+    string full_name
+    string phone
+    string language
+    string units
+  }
+  ENGINEER_PROFILES {
+    bigint user_id PK,FK
+    string title
+    enum verification_status
+    int years_experience
+  }
+  ADDRESSES {
+    bigint id PK
+    bigint user_id FK
+    string city
+    string street
+  }
+  ROLES {
+    bigint id PK
+    string name UK
+  }
+</pre></div>
+    <p class="key">Only a <b>verified</b> engineer profile can approve designs. Verification documents are stored in MinIO and referenced through <code>media_files</code>.</p>
+  </div>
+</section>
+
+<section id="projects">
+  <span class="eyebrow">Module 2</span>
+  <h2>Projects &amp; Collaboration</h2>
+  <div class="sheet plate">
+    <div class="plate-head"><p>A project is one apartment. Access is per project: owner, co-owner, engineer, viewer, or a share link that shows the As-Is twin only.</p></div>
+    <div class="diagram"><pre class="mermaid">
+erDiagram
+  USERS ||--o{ PROJECTS : "owns"
+  PROJECTS ||--o{ PROJECT_MEMBERS : "has"
+  USERS ||--o{ PROJECT_MEMBERS : "is member"
+  PROJECTS ||--o{ PROJECT_INVITATIONS : "sends"
+  PROJECTS ||--o{ SHARE_LINKS : "shared via"
+  PROJECTS ||--o| PROJECT_BUDGETS : "has"
+  PROJECT_BUDGETS ||--o{ ROOM_BUDGETS : "allocates"
+  ROOMS ||--o| ROOM_BUDGETS : "gets"
+  LAYOUT_VERSIONS ||--o{ COMMENTS : "discussed in"
+  USERS ||--o{ COMMENTS : "writes"
+  COMMENTS ||--o{ COMMENTS : "replies"
+  PROJECTS {
+    bigint id PK
+    bigint owner_id FK
+    string name
+    enum property_type
+    enum status
+  }
+  PROJECT_MEMBERS {
+    bigint project_id PK,FK
+    bigint user_id PK,FK
+    enum role "owner, co_owner, engineer, viewer"
+  }
+  SHARE_LINKS {
+    bigint id PK
+    bigint project_id FK
+    string token UK
+    datetime expires_at
+    datetime revoked_at
+  }
+  COMMENTS {
+    bigint id PK
+    bigint layout_version_id FK
+    bigint parent_id FK
+    string object_key "anchored object"
+    datetime resolved_at
+  }
+</pre></div>
+    <p class="key">Shared users never see payment details or delivery addresses. Comments are pinned to a 3D object through its <code>object_key</code>.</p>
+  </div>
+</section>
+
+<section id="spatial">
+  <span class="eyebrow">Module 3 · <span class="tag t-asis">AS-IS</span></span>
+  <h2>Spatial</h2>
+  <div class="sheet plate">
+    <div class="plate-head"><p>Scans and floor-plan imports produce room revisions. Each revision holds its own walls, openings, objects and zones.</p></div>
+    <div class="diagram"><pre class="mermaid">
+erDiagram
+  PROJECTS ||--o{ CAPTURE_SESSIONS : "captured by"
+  PROJECTS ||--o{ ROOMS : "contains"
+  ROOMS ||--o{ ROOM_REVISIONS : "versions"
+  CAPTURE_SESSIONS ||--o{ ROOM_REVISIONS : "produces"
+  ROOM_REVISIONS ||--o{ WALLS : "has"
+  ROOM_REVISIONS ||--o{ OPENINGS : "has"
+  WALLS ||--o{ OPENINGS : "contains"
+  ROOM_REVISIONS ||--o{ ROOM_OBJECTS : "has"
+  ROOM_REVISIONS ||--o{ ROOM_ZONES : "has"
+  ROOM_REVISIONS ||--o{ RESCAN_CHANGES : "proposed by re-scan"
+  OBJECT_TYPES ||--o{ ROOM_OBJECTS : "classifies"
+  ORDER_ITEMS ||--o{ ROOM_OBJECTS : "installed as"
+  CAPTURE_SESSIONS {
+    bigint id PK
+    bigint project_id FK
+    enum method "scan, floor_plan"
+    enum status
+    decimal quality_score
+  }
+  ROOMS {
+    bigint id PK
+    bigint project_id FK
+    string name
+    bigint current_revision_id FK
+  }
+  ROOM_REVISIONS {
+    bigint id PK
+    bigint room_id FK
+    int revision_no
+    enum source "scan, plan, correction, merge, install"
+    enum status "draft, confirmed, superseded"
+    decimal floor_area
+    decimal ceiling_height
+  }
+  WALLS {
+    bigint id PK
+    bigint room_revision_id FK
+    decimal length
+    decimal thickness
+  }
+  OPENINGS {
+    bigint id PK
+    bigint wall_id FK
+    enum type "door, window"
+    decimal width
+    decimal height
+  }
+  ROOM_OBJECTS {
+    bigint id PK
+    bigint room_revision_id FK
+    bigint object_type_id FK
+    bigint installed_order_item_id FK
+    decimal x
+    decimal y
+    decimal yaw
+    decimal confidence
+  }
+</pre></div>
+    <p class="key">The room row stays the same. Every change (correction, re-scan merge, installed item) creates a <b>new revision</b>, so history is never overwritten. A draft revision can be edited; a confirmed one cannot (decision #5). The raw scan file stays in MinIO.</p>
+  </div>
+</section>
+
+<section id="design">
+  <span class="eyebrow">Module 4 · <span class="tag t-plan">PLANNED</span></span>
+  <h2>AI Design</h2>
+  <div class="sheet plate">
+    <div class="plate-head"><p>A brief runs a generation, which outputs concepts A/B/C. A concept starts an editable layout with versions v1, v2, v3. Each version is validated and reviewed.</p></div>
+    <div class="diagram"><pre class="mermaid">
+erDiagram
+  ROOM_REVISIONS ||--o{ DESIGN_BRIEFS : "based on"
+  DESIGN_BRIEFS ||--o{ DESIGN_GENERATIONS : "runs"
+  DESIGN_GENERATIONS ||--o{ DESIGN_CONCEPTS : "outputs A B C"
+  ROOMS ||--o{ LAYOUTS : "designed by"
+  DESIGN_CONCEPTS ||--o| LAYOUTS : "starts"
+  LAYOUTS ||--o{ LAYOUT_VERSIONS : "v1 v2 v3"
+  ROOM_REVISIONS ||--o{ LAYOUT_VERSIONS : "built on"
+  LAYOUT_VERSIONS ||--o{ LAYOUT_ITEMS : "contains"
+  OBJECT_TYPES ||--o{ LAYOUT_ITEMS : "placeholder type"
+  PRODUCT_VARIANTS ||--o{ LAYOUT_ITEMS : "matched to"
+  ASSET_VERSIONS ||--o{ LAYOUT_ITEMS : "pinned model"
+  LAYOUT_VERSIONS ||--o{ VALIDATION_RUNS : "validated"
+  VALIDATION_RUNS ||--o{ VALIDATION_ISSUES : "finds"
+  LAYOUT_VERSIONS ||--o{ DESIGN_REVIEWS : "reviewed"
+  LAYOUTS ||--o{ COPILOT_CONVERSATIONS : "edited via"
+  COPILOT_CONVERSATIONS ||--o{ COPILOT_MESSAGES : "has"
+  COPILOT_MESSAGES ||--o| COPILOT_CHANGE_SETS : "proposes"
+  LAYOUT_VERSIONS ||--o{ RENDERS : "rendered"
+  LAYOUTS {
+    bigint id PK
+    bigint room_id FK
+    bigint concept_id FK
+    bigint approved_version_id FK
+    bool is_planned "one per room"
+  }
+  LAYOUT_VERSIONS {
+    bigint id PK
+    bigint layout_id FK
+    bigint room_revision_id FK
+    int version_no
+    enum status "draft, submitted, approved, revision_requested"
+  }
+  LAYOUT_ITEMS {
+    bigint id PK
+    bigint layout_version_id FK
+    string object_key "LR-SOFA-01"
+    bigint object_type_id FK
+    bigint product_variant_id FK
+    bigint asset_version_id FK
+    enum status "placeholder, matched, ordered, installed"
+    decimal x
+    decimal y
+    decimal yaw
+  }
+  DESIGN_GENERATIONS {
+    bigint id PK
+    bigint brief_id FK
+    enum status
+    string model_version
+    bigint credit_entry_id FK
+  }
+  VALIDATION_ISSUES {
+    bigint id PK
+    bigint validation_run_id FK
+    enum severity "invalid, warning"
+    string check_type
+  }
+</pre></div>
+    <p class="key"><code>design_concepts</code> holds the AI output and is <b>never edited</b>. All editing happens in <code>layouts</code> and <code>layout_versions</code>. A version can't be approved while it has <i>invalid</i> issues. <code>object_key</code> stays the same from placeholder to installed. Each matched item pins the exact <code>asset_version_id</code> (decision #7). Product-linked items must have it; generic placeholders may leave it empty.</p>
+  </div>
+</section>
+
+<section id="catalog">
+  <span class="eyebrow">Module 5</span>
+  <h2>Catalog</h2>
+  <div class="sheet plate">
+    <div class="plate-head"><p>Stores sell products, and products have variants (colour, material, size). Stock is kept per variant, and 3D models are versioned.</p></div>
+    <div class="diagram"><pre class="mermaid">
+erDiagram
+  STORES ||--o{ STORE_MEMBERS : "has"
+  USERS ||--o{ STORE_MEMBERS : "works at"
+  STORES ||--o{ PRODUCTS : "sells"
+  CATEGORIES ||--o{ CATEGORIES : "parent"
+  CATEGORIES ||--o{ PRODUCTS : "groups"
+  CATEGORIES ||--o{ OBJECT_TYPES : "maps"
+  PRODUCTS ||--o{ PRODUCT_VARIANTS : "has"
+  COLORS ||--o{ PRODUCT_VARIANTS : "color"
+  PRODUCT_VARIANTS ||--|| INVENTORY : "stock"
+  PRODUCTS }o--o{ STYLES : "product_styles"
+  PRODUCT_VARIANTS }o--o{ MATERIALS : "variant_materials"
+  PRODUCTS ||--o{ PRODUCT_MEDIA : "images"
+  PRODUCT_VARIANTS ||--o| ASSET_MODELS : "3D model"
+  ASSET_MODELS ||--o{ ASSET_VERSIONS : "versions"
+  STORES {
+    bigint id PK
+    string name
+    string slug UK
+    decimal commission_rate
+    enum status
+  }
+  PRODUCTS {
+    bigint id PK
+    bigint store_id FK
+    bigint category_id FK
+    string name
+    enum status
+  }
+  PRODUCT_VARIANTS {
+    bigint id PK
+    bigint product_id FK
+    string sku UK
+    decimal price
+    int width_mm
+    int depth_mm
+    int height_mm
+    int clearance_front_mm
+  }
+  INVENTORY {
+    bigint variant_id PK,FK
+    int on_hand
+    int reserved
+  }
+  ASSET_MODELS {
+    bigint id PK
+    bigint variant_id FK
+    bigint current_version_id FK
+  }
+  ASSET_VERSIONS {
+    bigint id PK
+    bigint asset_model_id FK
+    int version_no
+    enum status "draft, review, approved"
+  }
+</pre></div>
+    <p class="key">Dimensions are <b>real columns</b>, not JSON, so "only show what fits" is a plain indexed query. A product missing W, D or H is listed but left out of room matching. <code>object_types</code> is the generic furniture library used for placeholders.</p>
+  </div>
+</section>
+
+<section id="commerce">
+  <span class="eyebrow">Module 6 · <span class="tag t-buy">PURCHASED</span></span>
+  <h2>Commerce</h2>
+  <div class="sheet plate">
+    <div class="plate-head"><p>The customer sees one order. Each store gets its own store order. Money owed to stores goes through a ledger and is paid out in batches.</p></div>
+    <div class="diagram"><pre class="mermaid">
+erDiagram
+  USERS ||--o| CARTS : "active cart"
+  CARTS ||--o{ CART_ITEMS : "contains"
+  PRODUCT_VARIANTS ||--o{ CART_ITEMS : "in"
+  LAYOUT_ITEMS ||--o{ CART_ITEMS : "for slot"
+  USERS ||--o{ ORDERS : "places"
+  PROJECTS ||--o{ ORDERS : "for"
+  ORDERS ||--|{ STORE_ORDERS : "split per store"
+  STORES ||--o{ STORE_ORDERS : "fulfils"
+  STORE_ORDERS ||--|{ ORDER_ITEMS : "contains"
+  LAYOUT_ITEMS ||--o{ ORDER_ITEMS : "from slot"
+  ORDERS ||--o{ PAYMENTS : "paid by"
+  PAYMENTS ||--o{ REFUNDS : "refunded"
+  STORE_ORDERS ||--o{ SHIPMENTS : "shipped"
+  STORE_ORDERS ||--o{ ORDER_STATUS_EVENTS : "history"
+  ORDER_ITEMS ||--o{ RETURNS : "returned"
+  STORES ||--o{ STORE_LEDGER_ENTRIES : "balance"
+  STORE_ORDERS ||--o{ STORE_LEDGER_ENTRIES : "creates"
+  STORES ||--o{ PAYOUTS : "paid"
+  PAYOUTS ||--|{ PAYOUT_ITEMS : "settles"
+  STORE_LEDGER_ENTRIES ||--o| PAYOUT_ITEMS : "in"
+  ORDERS {
+    bigint id PK
+    string order_no UK "NS-20418"
+    bigint user_id FK
+    json shipping_address_snapshot
+    decimal total
+  }
+  STORE_ORDERS {
+    bigint id PK
+    bigint order_id FK
+    bigint store_id FK
+    enum delivery_option
+    enum status
+    decimal commission_rate "snapshot"
+    decimal commission_amount
+    enum collected_by "platform, store"
+  }
+  ORDER_ITEMS {
+    bigint id PK
+    bigint store_order_id FK
+    bigint variant_id FK
+    bigint layout_item_id FK
+    string product_name "snapshot"
+    decimal unit_price "snapshot"
+    int width_mm "snapshot"
+    int qty
+  }
+  PAYMENTS {
+    bigint id PK
+    bigint order_id FK
+    enum method "card, installment, cod"
+    string provider_reference
+    enum status
+  }
+  STORE_LEDGER_ENTRIES {
+    bigint id PK
+    bigint store_id FK
+    enum entry_type
+    decimal amount
+  }
+</pre></div>
+    <p class="key"><code>order_items</code> copies the name, price and dimensions at purchase, so later catalogue changes don't touch past orders. <b>Decision #1:</b> NESTRA collects card and instalment payments and pays each store its share minus commission. For cash on delivery the store collects the money, and the commission is deducted from that store's next payout. The commission rate is copied onto each store order at checkout. The store's balance is always calculated from the ledger, never stored.</p>
+  </div>
+</section>
+
+<section id="billing">
+  <span class="eyebrow">Module 7</span>
+  <h2>Platform Billing</h2>
+  <div class="sheet plate">
+    <div class="plate-head"><p>NESTRA's own fees: the Homeowner package per apartment, the Pro monthly plan, and AI credit top-ups. Kept separate from marketplace orders.</p></div>
+    <div class="diagram"><pre class="mermaid">
+erDiagram
+  PLANS ||--o{ PLAN_FEATURES : "quotas"
+  USERS ||--o{ SUBSCRIPTIONS : "Pro"
+  PLANS ||--o{ SUBSCRIPTIONS : "of"
+  PROJECTS ||--o| PROJECT_ENTITLEMENTS : "Homeowner package"
+  PLANS ||--o{ PROJECT_ENTITLEMENTS : "of"
+  USERS ||--o{ CREDIT_LEDGER : "credits"
+  CREDIT_LEDGER ||--o| DESIGN_GENERATIONS : "spent on"
+  PLANS ||--o{ FEATURE_CREDIT_COSTS : "priced"
+  PLANS {
+    bigint id PK
+    string code UK
+    enum billing "one_off, monthly"
+    decimal price
+  }
+  PLAN_FEATURES {
+    bigint plan_id PK,FK
+    string feature PK
+    int quota
+  }
+  CREDIT_LEDGER {
+    bigint id PK
+    bigint user_id FK
+    int delta
+    string idempotency_key UK
+  }
+</pre></div>
+    <p class="key"><b>Pending product-owner sign-off.</b> Suggested reading of the mobile designs: the Homeowner package is a one-off fee per apartment with separate quotas (8 layouts, 6 renders, 30 copilot calls). Pro is monthly. Top-up credits are one shared pool, used after the quota runs out. Failed AI runs refund their credit.</p>
+  </div>
+</section>
+
+<section id="supporting">
+  <span class="eyebrow">Module 8</span>
+  <h2>Supporting</h2>
+  <div class="sheet plate">
+    <div class="plate-head"><p>Services used by every module: the file registry, notifications, reviews, favourites and the audit log.</p></div>
+    <div class="diagram"><pre class="mermaid">
+erDiagram
+  USERS ||--o{ MEDIA_FILES : "uploads"
+  USERS ||--o{ NOTIFICATIONS : "receives"
+  USERS ||--o{ NOTIFICATION_PREFERENCES : "sets"
+  USERS }o--o{ PRODUCTS : "favorites"
+  USERS }o--o{ STORES : "favorite_stores"
+  ORDER_ITEMS ||--o| PRODUCT_REVIEWS : "verified review"
+  USERS ||--o{ ENGINEER_REVIEWS : "rates engineer"
+  ENGINEER_PROFILES ||--o{ PORTFOLIO_ITEMS : "publishes"
+  USERS ||--o{ AUDIT_LOGS : "acts"
+  LAYOUT_ITEMS ||--o{ EXTERNAL_PRODUCT_SUGGESTIONS : "fallback"
+  MEDIA_FILES {
+    bigint id PK
+    string bucket
+    string object_key UK
+    string mime
+    bigint size
+    string checksum
+    string owner_type
+    bigint owner_id
+  }
+</pre></div>
+    <p class="key"><code>media_files</code> is a registry of files kept in MinIO (scans, floor plans, GLB models, images, renders). MySQL stores only the location and metadata, never the file itself. External product suggestions are shown only when nothing in the catalogue fits, and are never sold through NESTRA.</p>
+  </div>
+</section>
+
+<section id="relationships">
+  <span class="eyebrow">All relationships</span>
+  <h2>Every relationship by type</h2>
+  <div class="filter" role="group" aria-label="Filter by relationship type">
+    <button type="button" id="f-all" data-f="all" aria-pressed="true">All</button>
+    <button type="button" id="f-11" data-f="11" aria-pressed="false">One-to-one</button>
+    <button type="button" id="f-1n" data-f="1n" aria-pressed="false">One-to-many</button>
+    <button type="button" id="f-mn" data-f="mn" aria-pressed="false">Many-to-many</button>
+  </div>
+  <span class="count" id="rel-count"></span>
+  <div class="sheet tablebox">
+    <table>
+      <thead><tr><th>Type</th><th>From</th><th>To</th><th>Junction / key</th><th>Why</th></tr></thead>
+      <tbody id="rel-body">
+        <tr data-k="11"><td><span class="card c11">1 : 1</span></td><td class="t">users</td><td class="t">user_profiles</td><td class="t">user_id (PK, FK)</td><td>Keeps login data apart from profile data</td></tr>
+        <tr data-k="11"><td><span class="card c11">1 : 0..1</span></td><td class="t">users</td><td class="t">engineer_profiles</td><td class="t">user_id (PK, FK)</td><td>Only engineers have one</td></tr>
+        <tr data-k="11"><td><span class="card c11">1 : 1</span></td><td class="t">product_variants</td><td class="t">inventory</td><td class="t">variant_id (PK, FK)</td><td>One stock record per variant, one location per store</td></tr>
+        <tr data-k="11"><td><span class="card c11">1 : 0..1</span></td><td class="t">projects</td><td class="t">project_budgets</td><td class="t">project_id</td><td>One budget per apartment</td></tr>
+        <tr data-k="11"><td><span class="card c11">1 : 0..1</span></td><td class="t">rooms</td><td class="t">room_budgets</td><td class="t">room_id</td><td>One allocation per room</td></tr>
+        <tr data-k="11"><td><span class="card c11">1 : 0..1</span></td><td class="t">projects</td><td class="t">project_entitlements</td><td class="t">project_id</td><td>One Homeowner package per apartment</td></tr>
+        <tr data-k="11"><td><span class="card c11">1 : 0..1</span></td><td class="t">order_items</td><td class="t">product_reviews</td><td class="t">order_item_id (UK)</td><td>One verified review per purchased item</td></tr>
+        <tr data-k="11"><td><span class="card c11">1 : 0..1</span></td><td class="t">users</td><td class="t">carts (active)</td><td class="t">user_id</td><td>One open cart per user</td></tr>
+        <tr data-k="11"><td><span class="card c11">1 : 0..1</span></td><td class="t">copilot_messages</td><td class="t">copilot_change_sets</td><td class="t">message_id</td><td>A message proposes at most one change set</td></tr>
+        <tr data-k="11"><td><span class="card c11">1 : 0..1</span></td><td class="t">store_ledger_entries</td><td class="t">payout_items</td><td class="t">ledger_entry_id (UK)</td><td>An entry is settled by one payout only</td></tr>
+
+        <tr data-k="1n"><td><span class="card c1n">1 : N</span></td><td class="t">users</td><td class="t">projects, addresses, orders, comments, social_accounts, notifications</td><td class="t">user_id / owner_id</td><td>A user owns many records</td></tr>
+        <tr data-k="1n"><td><span class="card c1n">1 : N</span></td><td class="t">projects</td><td class="t">rooms, capture_sessions, invitations, share_links, orders</td><td class="t">project_id</td><td>Everything belongs to one apartment</td></tr>
+        <tr data-k="1n"><td><span class="card c1n">1 : N</span></td><td class="t">rooms</td><td class="t">room_revisions, layouts</td><td class="t">room_id</td><td>Many revisions and designs per room</td></tr>
+        <tr data-k="1n"><td><span class="card c1n">1 : N</span></td><td class="t">capture_sessions</td><td class="t">room_revisions</td><td class="t">capture_session_id</td><td>One scan can produce revisions for many rooms</td></tr>
+        <tr data-k="1n"><td><span class="card c1n">1 : N</span></td><td class="t">room_revisions</td><td class="t">walls, openings, room_objects, zones, design_briefs, layout_versions</td><td class="t">room_revision_id</td><td>Geometry is tied to one revision</td></tr>
+        <tr data-k="1n"><td><span class="card c1n">1 : N</span></td><td class="t">walls</td><td class="t">openings</td><td class="t">wall_id</td><td>Doors and windows sit in a wall</td></tr>
+        <tr data-k="1n"><td><span class="card c1n">1 : N</span></td><td class="t">design_briefs</td><td class="t">design_generations</td><td class="t">brief_id</td><td>A brief can be regenerated</td></tr>
+        <tr data-k="1n"><td><span class="card c1n">1 : N</span></td><td class="t">design_generations</td><td class="t">design_concepts</td><td class="t">generation_id</td><td>One run outputs concepts A, B, C</td></tr>
+        <tr data-k="1n"><td><span class="card c1n">1 : N</span></td><td class="t">layouts</td><td class="t">layout_versions, copilot_conversations</td><td class="t">layout_id</td><td>Revision history v1, v2, v3</td></tr>
+        <tr data-k="1n"><td><span class="card c1n">1 : N</span></td><td class="t">layout_versions</td><td class="t">layout_items, validation_runs, design_reviews, comments, renders</td><td class="t">layout_version_id</td><td>Each version is a frozen snapshot</td></tr>
+        <tr data-k="1n"><td><span class="card c1n">1 : N</span></td><td class="t">validation_runs</td><td class="t">validation_issues</td><td class="t">validation_run_id</td><td>Collisions, door clearance, walkways</td></tr>
+        <tr data-k="1n"><td><span class="card c1n">1 : N</span></td><td class="t">object_types</td><td class="t">layout_items, room_objects</td><td class="t">object_type_id</td><td>Generic furniture classification</td></tr>
+        <tr data-k="1n"><td><span class="card c1n">1 : N</span></td><td class="t">product_variants</td><td class="t">layout_items, cart_items, order_items</td><td class="t">variant_id</td><td>One product fills many slots and orders</td></tr>
+        <tr data-k="1n"><td><span class="card c1n">1 : N</span></td><td class="t">asset_versions</td><td class="t">layout_items</td><td class="t">asset_version_id</td><td>The pinned 3D model (#7)</td></tr>
+        <tr data-k="1n"><td><span class="card c1n">1 : N</span></td><td class="t">stores</td><td class="t">products, store_orders, ledger_entries, payouts</td><td class="t">store_id</td><td>Store owns its catalogue and money</td></tr>
+        <tr data-k="1n"><td><span class="card c1n">1 : N</span></td><td class="t">categories</td><td class="t">categories, products, object_types</td><td class="t">parent_id / category_id</td><td>Category tree (self-reference)</td></tr>
+        <tr data-k="1n"><td><span class="card c1n">1 : N</span></td><td class="t">products</td><td class="t">product_variants, product_media</td><td class="t">product_id</td><td>Colours, materials and images</td></tr>
+        <tr data-k="1n"><td><span class="card c1n">1 : N</span></td><td class="t">asset_models</td><td class="t">asset_versions</td><td class="t">asset_model_id</td><td>3D model history</td></tr>
+        <tr data-k="1n"><td><span class="card c1n">1 : N</span></td><td class="t">orders</td><td class="t">store_orders, payments</td><td class="t">order_id</td><td>One order is split per store</td></tr>
+        <tr data-k="1n"><td><span class="card c1n">1 : N</span></td><td class="t">store_orders</td><td class="t">order_items, shipments, status_events</td><td class="t">store_order_id</td><td>Each store ships and tracks its part</td></tr>
+        <tr data-k="1n"><td><span class="card c1n">1 : N</span></td><td class="t">order_items</td><td class="t">returns, room_objects</td><td class="t">order_item_id</td><td>Returns, and the installed object in As-Is</td></tr>
+        <tr data-k="1n"><td><span class="card c1n">1 : N</span></td><td class="t">payments</td><td class="t">refunds</td><td class="t">payment_id</td><td>Partial refunds</td></tr>
+        <tr data-k="1n"><td><span class="card c1n">1 : N</span></td><td class="t">payouts</td><td class="t">payout_items</td><td class="t">payout_id</td><td>A payout settles many ledger entries</td></tr>
+        <tr data-k="1n"><td><span class="card c1n">1 : N</span></td><td class="t">plans</td><td class="t">plan_features, subscriptions, project_entitlements</td><td class="t">plan_id</td><td>Quotas and who bought the plan</td></tr>
+        <tr data-k="1n"><td><span class="card c1n">1 : N</span></td><td class="t">comments</td><td class="t">comments</td><td class="t">parent_id</td><td>Threaded replies</td></tr>
+
+        <tr data-k="mn"><td><span class="card cmn">M : N</span></td><td class="t">users</td><td class="t">projects</td><td class="t">project_members (+ role)</td><td>Owner, co-owner, engineer, viewer</td></tr>
+        <tr data-k="mn"><td><span class="card cmn">M : N</span></td><td class="t">users</td><td class="t">stores</td><td class="t">store_members (+ role)</td><td>Store owner and staff</td></tr>
+        <tr data-k="mn"><td><span class="card cmn">M : N</span></td><td class="t">users</td><td class="t">roles</td><td class="t">user_roles</td><td>A user can be homeowner and engineer</td></tr>
+        <tr data-k="mn"><td><span class="card cmn">M : N</span></td><td class="t">roles</td><td class="t">permissions</td><td class="t">role_permissions</td><td>Platform permissions</td></tr>
+        <tr data-k="mn"><td><span class="card cmn">M : N</span></td><td class="t">products</td><td class="t">styles</td><td class="t">product_styles</td><td>Modern, Minimal, Japandi…</td></tr>
+        <tr data-k="mn"><td><span class="card cmn">M : N</span></td><td class="t">product_variants</td><td class="t">materials</td><td class="t">variant_materials</td><td>Velvet, beech, brass…</td></tr>
+        <tr data-k="mn"><td><span class="card cmn">M : N</span></td><td class="t">users</td><td class="t">styles</td><td class="t">user_style_preferences</td><td>Onboarding style choices</td></tr>
+        <tr data-k="mn"><td><span class="card cmn">M : N</span></td><td class="t">users</td><td class="t">products</td><td class="t">favorites (+ created_at)</td><td>Saved products, price-drop alerts</td></tr>
+        <tr data-k="mn"><td><span class="card cmn">M : N</span></td><td class="t">users</td><td class="t">stores</td><td class="t">favorite_stores (+ created_at)</td><td>Favourite stores</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="decisions">
+  <span class="eyebrow">Design decisions</span>
+  <h2>Why it's shaped this way</h2>
+  <div class="decisions">
+    <div class="sheet dec"><h3>Revisions, not updates</h3><p>Room revisions and layout versions are append-only. You can always see what a room or design looked like on any date.</p></div>
+    <div class="sheet dec"><h3>Snapshots in orders</h3><p>Order items copy name, price and dimensions. Store orders copy the commission rate. Past orders never change.</p></div>
+    <div class="sheet dec"><h3>Stable object identity</h3><p><code>object_key</code> (e.g. LR-SOFA-01) follows one piece of furniture from placeholder to matched, ordered and installed.</p></div>
+    <div class="sheet dec"><h3>Pinned 3D versions</h3><p>A new model shows as "update available" and is used only when a new layout version is saved and validated again.</p><span class="src">Decision #7 · Figma AS 05, EN 07</span></div>
+    <div class="sheet dec"><h3>Ledgers, not balance columns</h3><p>Store balances and AI credits are calculated from append-only ledgers with idempotency keys. No balance can drift.</p><span class="src">Decision #1 · Figma SL 01, MK 10–11</span></div>
+    <div class="sheet dec"><h3>JSON only where nobody searches</h3><p>Dimensions, prices and statuses are real columns with indexes. JSON is used only for the address snapshot and raw scan output.</p></div>
+  </div>
+  <div class="sheet open">
+    <h3>Still open</h3>
+    <ul>
+      <li>Compare this design with the 69 tables in <code>NESTRA-GP/database</code> and match the names.</li>
+      <li>Product-owner sign-off on platform billing: quotas, what a credit buys, the Pro fair-use cap.</li>
+      <li>Whether AR placement and real-time voice/video are in the MVP. The Figma files have no screens for them, so no tables are planned.</li>
+    </ul>
+  </div>
+</section>
+
+<footer>NESTRA · data model v1 · 26 Nov 2026 · Design only. The SQL and Laravel migrations live in the database repo.</footer>
+</div>
+
+<script>
+(function(){
+  var btns=document.querySelectorAll('.filter button');
+  var rows=document.querySelectorAll('#rel-body tr');
+  var count=document.getElementById('rel-count');
+  function apply(f){
+    var n=0;
+    rows.forEach(function(r){var show=f==='all'||r.dataset.k===f;r.hidden=!show;if(show)n++;});
+    btns.forEach(function(b){b.setAttribute('aria-pressed',b.dataset.f===f?'true':'false');});
+    count.textContent=n+' relationships shown';
+  }
+  btns.forEach(function(b){b.addEventListener('click',function(){apply(b.dataset.f);});});
+  apply('all');
+})();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>
+  var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  mermaid.initialize({ startOnLoad: true, theme: dark ? 'dark' : 'neutral', securityLevel: 'strict' });
+</script>
+</body>
+</html>
